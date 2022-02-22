@@ -1,0 +1,121 @@
+Bit\Byte Stream Management:
+---------------------------
+
+Boundaries: Bytes vs bits, units to read data.
+
+ByteStram:
+----------
+
+struct ByteStream
+{
+    unsigned char* buffer;
+    unsigned int size;
+}
+
+Operations:
+-----------
+    Read/Write one or more bytes.
+    Curr pos
+    Size of Stream
+    Stream condn
+
+ByteStram Reader:
+-----------------
+
+#pragma once
+#include <vector>
+using namespace std;
+
+class CByteReader {
+	
+private:
+	vector<char> BUFFER;
+	uint16_t m_nTotal;
+	uint16_t m_nOffset;
+
+public:
+	CByteReader();
+	CByteReader(int cap, char* BUFFER);
+	void Reset(int cap, char* BUFFER);
+	string ReadString(int n);
+	unsigned long ReadBE(int n);  //read big endian, internal offset updated, the value of n is from 1 to 4
+	unsigned long ReadLE(int n); //read litle endian, internal offset updated
+	unsigned long ShowBE(int n); //just return big endian, without updating internal offset
+	unsigned long ShowLE(int n); //just return big endian, without updating internal offsetun
+	int Tell();  // returns the current postion(offset) in internal buffer
+	int Total();  // returns the total size of internal buffer
+	int Remaining();  // returns the remaining bytes in internal buffer
+	void Flush(int n); // moves the current position ahead by n bytes
+};
+
+Reading ACC to endianess:
+-------------------------
+
+In little endian lsb is stored first, which has computational advantanges, programmers must've encountered.
+   ------------->lsb first
+b1 = read1Byte;
+b2 = read1Byte;
+
+LE = (b2<<8)|b1;
+BE = (b1<<8)|b2;
+
+Write Byte:
+-----------
+
+1 Byte:
+-------
+
+void writeByte(uint8 value)
+{
+	m_buffer[m_pos++] = value;
+}
+
+2 Bytes:
+--------
+
+void write2BE(uint16 value)
+{	
+	//final value passed will be uint8 value
+	writeByte(value>>8);
+	writeByte(value & 0xff);
+}
+
+void write2LE(uint16 value)
+{
+	writeByte(value & 0xff);
+	writeByte(value>>8);
+}
+
+4 Bytes:
+--------
+
+void write4BE(uint32 value)
+{	
+	//final value passed will be uint8 value
+	write2BE(value>>16);
+	write2BE(value & 0xffff);
+}
+
+void write4LE(uint32 value)
+{
+	write2LE(value & 0xffff);
+	write2LE(value>>16);
+}
+
+BitStream Reader:
+-----------------
+ 
+
+ void loadWord(){
+	 int bits = 8;
+	 m_currentWord = 0;
+
+	 for(int i=0;i<4;i++){
+		 uint8 byte = m_buffer[m_offset++];
+		 uint32 tmp = byte<<(32-byte);
+		 m_currentWord |= tmp;
+		 bits+=8;
+	 }
+ }
+
+  
